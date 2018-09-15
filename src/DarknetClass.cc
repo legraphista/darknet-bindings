@@ -4,6 +4,10 @@
 #include "helpers/fail.h"
 #include "helpers/assert.h"
 #include "helpers/object.h"
+#include "napi-thread-safe-callback.hpp"
+
+#include "node_api_types.h"
+#include "workers/rgb-to-darknet.h"
 
 using namespace Napi;
 using namespace std;
@@ -11,11 +15,12 @@ using namespace std;
 Object Init(Env env, Object exports) {
 	Napi::HandleScope scope(env);
 
-	Napi::Function func = DarknetClass::DefineClass(env, "Darknet", {
-			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory)
+	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
+			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
+			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet)
 	});
 
-	exports.Set("Darknet", func);
+	exports.Set("DarknetClass", func);
 	return exports;
 }
 
@@ -51,6 +56,7 @@ DarknetClass::DarknetClass(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Da
 		this->hier_thresh = options.Get("hier_thresh").ToNumber();
 	}
 
+
 	this->net = load_network(
 			(char *) this->cfgFile.c_str(),
 			(char *) this->weightsFile.c_str(),
@@ -61,6 +67,7 @@ DarknetClass::DarknetClass(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Da
 	this->makeMemory();
 	srand(2222222);
 }
+
 DarknetClass::~DarknetClass() {
 	this->freeMemory();
 	free_network(this->net);
@@ -85,12 +92,26 @@ void DarknetClass::resetMemory(const Napi::CallbackInfo &info) {
 	if (info.Length() > 0 && info[0].IsNumber()) {
 		int n = info[0].ToNumber();
 		if (n < 0) {
-			fail("Cannot set memory lower than 0");
+			js_fail("Cannot set memory lower than 0");
 		}
 		this->memoryCount = n;
 	}
 
 	this->makeMemory();
+}
+
+void DarknetClass::rgbToDarknet(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	assert(info.Length() == 5, "There must be 4 params passed");
+
+	auto imageBuffer = info[0].As<Uint8Array>();
+	int w = info[1].ToNumber();
+	int h = info[2].ToNumber();
+	int c = info[3].ToNumber();
+	auto callback = info[4].As<Function>();
+
+	RGB2DarknetWorker *worker = new RGB2DarknetWorker(imageBuffer, w, h, c, callback);
+	worker->Queue();
 }
 
 NODE_API_MODULE(darknet, Init);

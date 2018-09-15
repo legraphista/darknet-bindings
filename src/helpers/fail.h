@@ -14,9 +14,9 @@ static std::string format(const std::string& format, Args ... args) {
 	return str;
 }
 
-#define fail(...) { Napi::Error::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return; }
-#define failt(...) { Napi::TypeError::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return; }
-#define failv(...) { Napi::Error::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return Napi::Value(); }
+#define js_fail(...) { Napi::Error::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return; }
+#define js_failt(...) { Napi::TypeError::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return; }
+#define js_failv(...) { Napi::Error::New(env, format(__VA_ARGS__)).ThrowAsJavaScriptException(); return Napi::Value(); }
 
 
 #endif //DARKNET_BINDINGS_FAIL_H

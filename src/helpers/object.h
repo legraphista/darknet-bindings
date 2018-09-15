@@ -17,7 +17,7 @@
 
 #define assertObjectValueMustBeArray(object, name) { \
 	assertObjectMustHave(object, name); \
-	assert(object.Get(name).IsObject(), std::string(name) + " must be an array"); \
+	assert(object.Get(name).IsArray(), std::string(name) + " must be an array"); \
 }
 
 #define objectGetString(target, object, name) { \
@@ -30,7 +30,7 @@
 	try { \
 		target = object.Get(name).As<Napi::Array>(); \
   } catch (auto e) { \
-		fail(std::string(name) + " must be an array") \
+		js_fail(std::string(name) + " must be an array") \
 	} \
 }
 

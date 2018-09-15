@@ -7,6 +7,7 @@
 
 #include "fail.h"
 
-#define assert(condition, message) { if(!(condition)) { fail(message); } }
+#define assert(condition, message) { if(!(condition)) { js_fail(message); } }
+#define assertv(condition, message) { if(!(condition)) { js_failv(message); } }
 
 #endif //DARKNET_BINDINGS_ASSERT_H

@@ -19,7 +19,9 @@ public:
 
 		void resetMemory(const Napi::CallbackInfo& info);
 
+		void rgbToDarknet(const Napi::CallbackInfo& info);
 private:
+
 		std::string cfgFile;
 		std::string weightsFile;
 		std::vector<std::string> names;
