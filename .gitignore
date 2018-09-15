@@ -1,0 +1,7 @@
+.idea/
+build/
+darknet/
+libdarknet.a
+libdarknet.so
+node_modules/
+test.js
