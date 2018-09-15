@@ -15,6 +15,10 @@ public:
 
 		DarknetClass(const Napi::CallbackInfo &info);
 
+		~DarknetClass();
+
+		void resetMemory(const Napi::CallbackInfo& info);
+
 private:
 		std::string cfgFile;
 		std::string weightsFile;
@@ -32,7 +36,9 @@ private:
 		int memorySlotsUsed = 0;
 		int memoryCount = 3;
 		float **memory = nullptr;
+
 		void makeMemory();
+
 		void freeMemory();
 
 };
