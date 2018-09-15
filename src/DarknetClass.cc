@@ -4,7 +4,6 @@
 #include "helpers/fail.h"
 #include "helpers/assert.h"
 #include "helpers/object.h"
-#include "napi-thread-safe-callback.hpp"
 
 #include "node_api_types.h"
 #include "workers/rgb-to-darknet.h"
