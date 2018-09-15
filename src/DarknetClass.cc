@@ -8,6 +8,7 @@
 
 #include "node_api_types.h"
 #include "workers/rgb-to-darknet.h"
+#include "workers/letterbox.h"
 
 using namespace Napi;
 using namespace std;
@@ -17,7 +18,8 @@ Object Init(Env env, Object exports) {
 
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
-			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet)
+			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet),
+			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox)
 	});
 
 	exports.Set("DarknetClass", func);
@@ -110,7 +112,23 @@ void DarknetClass::rgbToDarknet(const Napi::CallbackInfo &info) {
 	int c = info[3].ToNumber();
 	auto callback = info[4].As<Function>();
 
-	RGB2DarknetWorker *worker = new RGB2DarknetWorker(imageBuffer, w, h, c, callback);
+	auto *worker = new RGB2DarknetWorker(imageBuffer, w, h, c, callback);
+	worker->Queue();
+}
+
+void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	assert(info.Length() == 5, "There must be 4 params passed");
+	auto imageBuffer = info[0].As<Float32Array>();
+	int w = info[1].ToNumber();
+	int h = info[2].ToNumber();
+	int c = info[3].ToNumber();
+	auto callback = info[4].As<Function>();
+
+	int dw = this->net->w;
+	int dh = this->net->h;
+
+	auto *worker = new DarknetLetterboxWorker(imageBuffer, w, h, c, dw, dh, callback);
 	worker->Queue();
 }
 

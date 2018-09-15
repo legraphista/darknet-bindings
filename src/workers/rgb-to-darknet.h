@@ -8,6 +8,12 @@
 #include <napi.h>
 
 class RGB2DarknetWorker : public Napi::AsyncWorker {
+
+private:
+		Napi::Uint8Array imageBuffer;
+		Napi::Float32Array output;
+		int w, h, c;
+
 public:
 
 		RGB2DarknetWorker(Napi::Uint8Array imageBuffer, int w, int h, int c, Napi::Function &callback)
@@ -54,11 +60,6 @@ public:
 													out
 											});
 		}
-
-private:
-		Napi::Uint8Array imageBuffer;
-		Napi::Float32Array output;
-		int w, h, c;
 
 };
 

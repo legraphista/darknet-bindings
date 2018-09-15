@@ -20,6 +20,7 @@ public:
 		void resetMemory(const Napi::CallbackInfo& info);
 
 		void rgbToDarknet(const Napi::CallbackInfo& info);
+		void letterbox(const Napi::CallbackInfo& info);
 private:
 
 		std::string cfgFile;
