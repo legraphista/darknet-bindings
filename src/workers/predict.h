@@ -11,21 +11,47 @@
 
 class PredictWorker : public Napi::AsyncWorker {
 private:
-		float* input;
+		float *input;
 		network *net;
 		DarknetClass *darknetClass;
-public:
-		PredictWorker(DarknetClass *darknetClass, network *net, Napi::Buffer<char> image_pointer, Napi::Function &callback)
-				: Napi::AsyncWorker(callback) {
 
-			input = ref_unref_from_pointer<float*>(image_pointer.Data());
+		int nboxes = 0;
+		detection *dets;
+
+		int w, h;
+		float thresh, hier;
+public:
+		PredictWorker(
+				DarknetClass *darknetClass, network *net,
+				int w, int h,
+				float thresh, float hier,
+				Napi::Buffer<char> image_pointer,
+				Napi::Function &callback
+		) : Napi::AsyncWorker(callback) {
+
+			input = ref_unref_from_pointer<float *>(image_pointer.Data());
 			this->darknetClass = darknetClass;
 			this->net = net;
+			this->w = w;
+			this->h = h;
+			this->thresh = thresh;
+			this->hier = hier;
 		}
 
 		void Execute() {
-			network_predict(this->net, input);
+			network_predict(net, input);
 			darknetClass->rememberNet();
+			dets = get_network_boxes(net, w, h, thresh, hier, 0, 1, &nboxes);
+		}
+
+		void OnOK() {
+			Napi::HandleScope scope(Env());
+
+			Napi::Object ret = Napi::Object::New(Env());
+
+			ret["count"] = Napi::Number::New(Env(), nboxes);
+			ret["data_pointer"] = ref_unref_to_napi_buffer<detection *>(Env(), dets);
+			Callback().Call({Env().Undefined(), ret});
 		}
 };
 

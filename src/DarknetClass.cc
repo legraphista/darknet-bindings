@@ -145,11 +145,23 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	assert(info.Length() == 2, "There must be 1 param passed");
+	assert(info.Length() == 4, "There must be 1 param passed");
 	auto image_pointer_buffer = info[0].As<Napi::Buffer<char>>();
-	auto callback = info[1].As<Function>();
+	int w = info[1].ToNumber();
+	assert(w > 1, "invalid width");
+	int h = info[2].ToNumber();
+	assert(h > 1, "invalid height");
 
-	auto *worker = new PredictWorker(this, this->net, image_pointer_buffer, callback);
+	auto callback = info[3].As<Function>();
+
+	auto *worker = new PredictWorker(
+			this,
+			this->net,
+			w, h,
+			this->thresh,
+			this->hier_thresh,
+			image_pointer_buffer,
+			callback);
 	worker->Queue();
 }
 
