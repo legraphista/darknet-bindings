@@ -203,8 +203,9 @@ void DarknetClass::interpret(const Napi::CallbackInfo &info) {
 	assert(h > 0, "invalid height");
 	auto callback = info[4].As<Function>();
 
+	detection *dets = ref_unref_from_napi_buffer<detection *>(dets_pointer_buffer);
 	auto *worker = new InterpretWorker(
-			dets_pointer_buffer, nboxes,
+			dets, nboxes,
 			w, h,
 			this->thresh,
 			this->classes,

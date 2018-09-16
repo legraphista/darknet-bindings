@@ -35,19 +35,19 @@ private:
 
 public:
 		InterpretWorker(
-				Napi::Buffer<char> dets_data_pointer, int nboxes,
+				detection *dets, int nboxes,
 				int w, int h, float thresh,
 				unsigned int classes, std::vector<std::string> names,
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
+			this->dets = dets;
 			this->nboxes = nboxes;
 			this->classes = classes;
 			this->thresh = thresh;
 			this->w = w;
 			this->h = h;
 			this->names = names;
-			dets = ref_unref_from_napi_buffer<detection *>(dets_data_pointer);
 		}
 
 		void Execute() {
