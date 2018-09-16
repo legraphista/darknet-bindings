@@ -7,7 +7,6 @@
 
 #include <napi.h>
 #include <darknet.h>
-#include "helpers/ref-unref.h"
 
 class NMSWorker : public Napi::AsyncWorker {
 private:
@@ -30,7 +29,8 @@ public:
 			this->dets = dets;
 		}
 
-		void Execute() {
+		 void Execute() {
+			volatile int x= 0;
 			do_nms_obj(dets, nboxes, (int) classes, nms);
 		}
 };

@@ -154,16 +154,15 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	assert(info.Length() == 4, "There must be 1 param passed");
-	auto image_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	assert(info.Length() == 4, "There must be 4 param passed");
+	auto image_pointer_buffer = info[0].As<Napi::External<float>>();
 	int w = info[1].ToNumber();
 	assert(w > 0, "invalid width");
 	int h = info[2].ToNumber();
 	assert(h > 0, "invalid height");
 
 	auto callback = info[3].As<Function>();
-
-	float *image_pointer = ref_unref_from_napi_buffer<float *>(image_pointer_buffer);
+	float *image_pointer = image_pointer_buffer.Data();
 
 	auto *worker = new PredictWorker(
 			this,
@@ -179,12 +178,12 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 void DarknetClass::nms(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	assert(info.Length() == 3, "There must be 3 param passed");
-	auto dets_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	auto dets_pointer_buffer = info[0].As<Napi::External<detection>>();
 	int nboxes = info[1].ToNumber();
 	assert(nboxes >= 0, "cannot have negative box count");
 	auto callback = info[2].As<Function>();
 
-	detection *dets = ref_unref_from_napi_buffer<detection *>(dets_pointer_buffer);
+	detection *dets = dets_pointer_buffer.Data();
 	auto *worker = new NMSWorker(dets, nboxes, this->classes, this->nms_thresh, callback);
 	worker->Queue();
 }
@@ -193,7 +192,7 @@ void DarknetClass::interpret(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	assert(info.Length() == 5, "There must be 5 param passed");
 
-	Napi::Buffer<char> dets_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	auto dets_pointer_buffer = info[0].As<Napi::External<detection>>();
 	int nboxes = info[1].ToNumber();
 	assert(nboxes >= 0, "cannot have negative box count");
 
@@ -203,7 +202,7 @@ void DarknetClass::interpret(const Napi::CallbackInfo &info) {
 	assert(h > 0, "invalid height");
 	auto callback = info[4].As<Function>();
 
-	detection *dets = ref_unref_from_napi_buffer<detection *>(dets_pointer_buffer);
+	detection *dets = dets_pointer_buffer.Data();
 	auto *worker = new InterpretWorker(
 			dets, nboxes,
 			w, h,

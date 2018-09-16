@@ -7,7 +7,6 @@
 
 #include <napi.h>
 #include <darknet.h>
-#include "helpers/ref-unref.h"
 
 class DarknetLetterboxWorker : public Napi::AsyncWorker {
 
@@ -59,10 +58,7 @@ public:
 			ret["h"] = Napi::Number::New(Env(), output.h);
 			ret["c"] = Napi::Number::New(Env(), output.c);
 
-			char *pointer_value = ref_unref_to_pointer<float *>(output.data);
-			int pointer_size = ref_unref_size<float *>();
-
-			ret["data_pointer"] = Napi::Buffer<char>::New(Env(), pointer_value, pointer_size);
+			ret["data_pointer"] = Napi::External<float>::New(Env(), output.data);
 
 			Callback().Call({Env().Undefined(), ret});
 		}

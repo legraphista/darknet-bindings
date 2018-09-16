@@ -7,7 +7,6 @@
 
 #include <napi.h>
 #include <darknet.h>
-#include "helpers/ref-unref.h"
 
 struct Prediction {
 		std::vector<std::string> names;

@@ -7,7 +7,6 @@
 
 #include <napi.h>
 #include <darknet.h>
-#include "../helpers/ref-unref.h"
 
 class PredictWorker : public Napi::AsyncWorker {
 private:
@@ -30,6 +29,7 @@ public:
 		) : Napi::AsyncWorker(callback) {
 
 			input = image_pointer;
+//			printf("Memory letterbox 2 %x\n", &input);
 
 			this->darknetClass = darknetClass;
 			this->net = net;
@@ -52,7 +52,7 @@ public:
 			Napi::Object ret = Napi::Object::New(Env());
 
 			ret["count"] = Napi::Number::New(Env(), nboxes);
-			ret["data_pointer"] = ref_unref_to_napi_buffer<detection *>(Env(), dets);
+			ret["data_pointer"] = Napi::External<detection>::New(Env(), dets);
 			Callback().Call({Env().Undefined(), ret});
 		}
 };
