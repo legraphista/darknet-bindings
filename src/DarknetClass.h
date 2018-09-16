@@ -24,6 +24,7 @@ public:
 		void letterbox(const Napi::CallbackInfo& info);
 		void predict(const Napi::CallbackInfo& info);
 		void nms(const Napi::CallbackInfo& info);
+		void interpret(const Napi::CallbackInfo& info);
 private:
 
 		std::string cfgFile;

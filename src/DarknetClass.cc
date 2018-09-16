@@ -10,6 +10,7 @@
 #include "workers/letterbox.h"
 #include "workers/predict.h"
 #include "workers/nms.h"
+#include "workers/interpret.h"
 
 using namespace Napi;
 using namespace std;
@@ -22,7 +23,8 @@ Object Init(Env env, Object exports) {
 			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet),
 			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox),
 			DarknetClass::InstanceMethod("predict", &DarknetClass::predict),
-			DarknetClass::InstanceMethod("nms", &DarknetClass::nms)
+			DarknetClass::InstanceMethod("nms", &DarknetClass::nms),
+			DarknetClass::InstanceMethod("interpret", &DarknetClass::interpret)
 	});
 
 	exports.Set("DarknetClass", func);
@@ -170,13 +172,38 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 
 void DarknetClass::nms(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	assert(info.Length() == 3, "There must be 1 param passed");
+	assert(info.Length() == 3, "There must be 3 param passed");
 	auto dets_pointer_buffer = info[0].As<Napi::Buffer<char>>();
 	int nboxes = info[1].ToNumber();
 	assert(nboxes >= 0, "cannot have negative box count");
 	auto callback = info[2].As<Function>();
 
 	auto *worker = new NMSWorker(dets_pointer_buffer, nboxes, this->classes, this->nms_thresh, callback);
+	worker->Queue();
+}
+
+void DarknetClass::interpret(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	assert(info.Length() == 5, "There must be 5 param passed");
+
+	Napi::Buffer<char> dets_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	int nboxes = info[1].ToNumber();
+	assert(nboxes >= 0, "cannot have negative box count");
+
+	int w = info[2].ToNumber();
+	assert(w > 0, "invalid width");
+	int h = info[3].ToNumber();
+	assert(h > 0, "invalid height");
+	auto callback = info[4].As<Function>();
+
+	auto *worker = new InterpretWorker(
+			dets_pointer_buffer, nboxes,
+			w, h,
+			this->thresh,
+			this->classes,
+			this->names,
+			callback
+	);
 	worker->Queue();
 }
 
