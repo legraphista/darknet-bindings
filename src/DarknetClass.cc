@@ -163,13 +163,15 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 
 	auto callback = info[3].As<Function>();
 
+	float* image_pointer = ref_unref_from_napi_buffer<float*>(image_pointer_buffer);
+
 	auto *worker = new PredictWorker(
 			this,
 			this->net,
 			w, h,
 			this->thresh,
 			this->hier_thresh,
-			image_pointer_buffer,
+			image_pointer,
 			callback);
 	worker->Queue();
 }

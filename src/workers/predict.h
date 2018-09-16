@@ -25,11 +25,12 @@ public:
 				DarknetClass *darknetClass, network *net,
 				int w, int h,
 				float thresh, float hier,
-				Napi::Buffer<char> image_pointer,
+				float* image_pointer,
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
-			input = ref_unref_from_pointer<float *>(image_pointer.Data());
+			input = image_pointer;
+
 			this->darknetClass = darknetClass;
 			this->net = net;
 			this->w = w;
@@ -42,12 +43,12 @@ public:
 			network_predict(net, input);
 			darknetClass->rememberNet();
 			dets = get_network_boxes(net, w, h, thresh, hier, 0, 1, &nboxes);
-			free(input);
 		}
 
 		void OnOK() {
 			Napi::HandleScope scope(Env());
 
+			free(input);
 			Napi::Object ret = Napi::Object::New(Env());
 
 			ret["count"] = Napi::Number::New(Env(), nboxes);

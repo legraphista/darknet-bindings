@@ -25,7 +25,6 @@ public:
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
-			// make a copy in case JS decides to GC this
 			this->input = input;
 			this->w = w;
 			this->h = h;
@@ -41,6 +40,7 @@ public:
 			// this memory is owned by the C binding
 			output = letterbox_image(in, dw, dh);
 
+			// fre memory allocated by DarknetClass::letterbox
 			free(input);
 		}
 
