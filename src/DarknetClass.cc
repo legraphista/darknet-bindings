@@ -9,6 +9,7 @@
 #include "workers/rgb-to-darknet.h"
 #include "workers/letterbox.h"
 #include "workers/predict.h"
+#include "workers/nms.h"
 
 using namespace Napi;
 using namespace std;
@@ -20,7 +21,8 @@ Object Init(Env env, Object exports) {
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
 			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet),
 			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox),
-			DarknetClass::InstanceMethod("predict", &DarknetClass::predict)
+			DarknetClass::InstanceMethod("predict", &DarknetClass::predict),
+			DarknetClass::InstanceMethod("nms", &DarknetClass::nms)
 	});
 
 	exports.Set("DarknetClass", func);
@@ -45,12 +47,13 @@ DarknetClass::DarknetClass(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Da
 	Napi::Array names = options.Get("names").As<Napi::Array>();
 
 	unpackStringArray(this->names, names);
+	this->classes = (unsigned int) this->names.size();
 
 	if (options.Has("memoryCount")) {
 		this->memoryCount = options.Get("memoryCount").ToNumber();
 	}
 	if (options.Has("nms")) {
-		this->nms = options.Get("nms").ToNumber();
+		this->nms_thresh = options.Get("nms").ToNumber();
 	}
 	if (options.Has("thresh")) {
 		this->thresh = options.Get("thresh").ToNumber();
@@ -148,9 +151,9 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	assert(info.Length() == 4, "There must be 1 param passed");
 	auto image_pointer_buffer = info[0].As<Napi::Buffer<char>>();
 	int w = info[1].ToNumber();
-	assert(w > 1, "invalid width");
+	assert(w > 0, "invalid width");
 	int h = info[2].ToNumber();
-	assert(h > 1, "invalid height");
+	assert(h > 0, "invalid height");
 
 	auto callback = info[3].As<Function>();
 
@@ -162,6 +165,18 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 			this->hier_thresh,
 			image_pointer_buffer,
 			callback);
+	worker->Queue();
+}
+
+void DarknetClass::nms(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	assert(info.Length() == 3, "There must be 1 param passed");
+	auto dets_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	int nboxes = info[1].ToNumber();
+	assert(nboxes >= 0, "cannot have negative box count");
+	auto callback = info[2].As<Function>();
+
+	auto *worker = new NMSWorker(dets_pointer_buffer, nboxes, this->classes, this->nms_thresh, callback);
 	worker->Queue();
 }
 

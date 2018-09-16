@@ -23,16 +23,17 @@ public:
 		void rgbToDarknet(const Napi::CallbackInfo& info);
 		void letterbox(const Napi::CallbackInfo& info);
 		void predict(const Napi::CallbackInfo& info);
+		void nms(const Napi::CallbackInfo& info);
 private:
 
 		std::string cfgFile;
 		std::string weightsFile;
 		std::vector<std::string> names;
-		int classes = 0;
+		unsigned int classes = 0;
 
 		float thresh = 0.5;
 		float hier_thresh = 0.5;
-		float nms = 0.4;
+		float nms_thresh = 0.4;
 
 		int net_size_total = 0;
 		network *net;
