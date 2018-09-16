@@ -3,7 +3,6 @@
     {
       "target_name": "darknet-bindings",
       'include_dirs': [
-        "<!@(node -p \"require('napi-thread-safe-callback').include\")",
         "<!@(node -p \"require('node-addon-api').include\")",
         "src",
         "darknet/src",

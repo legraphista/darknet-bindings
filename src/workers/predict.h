@@ -42,6 +42,7 @@ public:
 			network_predict(net, input);
 			darknetClass->rememberNet();
 			dets = get_network_boxes(net, w, h, thresh, hier, 0, 1, &nboxes);
+			free(input);
 		}
 
 		void OnOK() {

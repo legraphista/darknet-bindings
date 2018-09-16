@@ -2,7 +2,7 @@
   "name": "darknet-bindings",
   "version": "1.0.0-pre4",
   "description": "Darknet NAPI Bindings",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "build": "node-gyp build",
     "install": "./install-script.sh && node-gyp rebuild",
@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.3.0",
+    "hoek": "^5.0.4",
     "node-addon-api": "^1.4.0"
   }
 }
