@@ -11,22 +11,20 @@ class RGB2DarknetWorker : public Napi::AsyncWorker {
 
 private:
 		Napi::Uint8Array imageBuffer;
-		Napi::Float32Array output;
 		int w, h, c;
-
+		float *output;
 public:
 
 		RGB2DarknetWorker(Napi::Uint8Array imageBuffer, int w, int h, int c, Napi::Function &callback)
 				: Napi::AsyncWorker(callback) {
-			this->imageBuffer = imageBuffer;// Napi::Uint8Array::From(Env(), imageBuffer);
+			this->imageBuffer = imageBuffer;
 			this->w = w;
 			this->h = h;
 			this->c = c;
-//			this->output = Napi::Float32Array::New(Env(), (size_t) w * h * c);
 		}
 
 		void Execute() {
-			this->output = Napi::Float32Array::New(Env(), (size_t) w * h * c);
+			this->output = output = (float *) calloc(w * h * c, sizeof(float));
 
 			int step = w * c;
 			int i, j, k;
@@ -45,20 +43,27 @@ public:
 			Napi::HandleScope scope(Env());
 
 			/*
-				We can't pass back the output directly even tho' it's been allocated in current env
-			  If we do, we end up with a random Value (usually a string) from the stack ¯\_(ツ)_/¯
-			  I don't think i understand this properly
+				we pass back a view with the raw float* data
+			  and we also make sure we free it
 			 */
 
-			// use buffer to make a quick copy
-			Napi::Buffer<float> copy = Napi::Buffer<float>::Copy(Env(), output.Data(), output.ElementLength());
-			// use the ArrayBuffer to make thew new Float32 interpretation
-			Napi::Float32Array out = Napi::Float32Array::New(Env(), output.ElementLength(), copy.ArrayBuffer(), 0);
+			auto arrView = Napi::ArrayBuffer::New(
+					Env(),
+					output,
+					w * h * c * sizeof(float),
+					[](Napi::Env /*env*/, void *finalizeData) {
+							free(finalizeData);
+					}
+			);
 
-			Callback().Call({
-													Env().Undefined(),
-													out
-											});
+			Napi::Float32Array out = Napi::Float32Array::New(
+					Env(),
+					imageBuffer.ElementLength(),
+					arrView,
+					0
+			);
+
+			Callback().Call({Env().Undefined(), out});
 		}
 
 };
