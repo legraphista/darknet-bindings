@@ -143,7 +143,11 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 	int dw = this->net->w;
 	int dh = this->net->h;
 
-	auto *worker = new DarknetLetterboxWorker(imageBuffer, w, h, c, dw, dh, callback);
+	// make a copy in case JS decides to GC this
+	float* imageCopy = (float *) malloc(imageBuffer.ByteLength());
+	memcpy(imageCopy, imageBuffer.Data(), imageBuffer.ByteLength());
+
+	auto *worker = new DarknetLetterboxWorker(imageCopy, w, h, c, dw, dh, callback);
 	worker->Queue();
 }
 

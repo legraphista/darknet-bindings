@@ -12,14 +12,20 @@
 class DarknetLetterboxWorker : public Napi::AsyncWorker {
 
 private:
-		Napi::Float32Array input;
+		float *input;
 		image output;
 		int w, h, c;
 		int dw, dh;
 
 public:
-		DarknetLetterboxWorker(Napi::Float32Array input, int w, int h, int c, int dw, int dh, Napi::Function &callback)
-				: Napi::AsyncWorker(callback) {
+		DarknetLetterboxWorker(
+				float *input,
+				int w, int h, int c,
+				int dw, int dh,
+				Napi::Function &callback
+		) : Napi::AsyncWorker(callback) {
+
+			// make a copy in case JS decides to GC this
 			this->input = input;
 			this->w = w;
 			this->h = h;
@@ -30,13 +36,12 @@ public:
 
 		void Execute() {
 
-			image in = float_to_image(w, h, c, input.Data());
+			image in = float_to_image(w, h, c, input);
 
 			// this memory is owned by the C binding
 			output = letterbox_image(in, dw, dh);
 
-			// no need to free image since memory is held by JS
-			// free_image(in);
+			free(input);
 		}
 
 		void OnOK() {
@@ -54,8 +59,8 @@ public:
 			ret["h"] = Napi::Number::New(Env(), output.h);
 			ret["c"] = Napi::Number::New(Env(), output.c);
 
-			char *pointer_value = ref_unref_to_pointer<float*>(output.data);
-			int pointer_size = ref_unref_size<float*>();
+			char *pointer_value = ref_unref_to_pointer<float *>(output.data);
+			int pointer_size = ref_unref_size<float *>();
 
 			ret["data_pointer"] = Napi::Buffer<char>::New(Env(), pointer_value, pointer_size);
 
