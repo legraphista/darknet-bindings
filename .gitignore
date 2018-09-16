@@ -7,3 +7,5 @@ node_modules/
 test.js
 testjs.js
 crash.log
+.DS_Store
+yolov3.weights

@@ -17,14 +17,23 @@ public:
 
 		~DarknetClass();
 
-		void resetMemory(const Napi::CallbackInfo& info);
+		void resetMemory(const Napi::CallbackInfo &info);
+
 		void rememberNet();
 
-		void rgbToDarknet(const Napi::CallbackInfo& info);
-		void letterbox(const Napi::CallbackInfo& info);
-		void predict(const Napi::CallbackInfo& info);
-		void nms(const Napi::CallbackInfo& info);
-		void interpret(const Napi::CallbackInfo& info);
+		void rgbToDarknet(const Napi::CallbackInfo &info);
+
+		void letterbox(const Napi::CallbackInfo &info);
+
+		void predict(const Napi::CallbackInfo &info);
+
+		void nms(const Napi::CallbackInfo &info);
+
+		void interpret(const Napi::CallbackInfo &info);
+
+		detection *predictWithoutMemory(int *nboxes, int w, int h);
+		detection *predictWithMemory(int *nboxes, int w, int h);
+
 private:
 
 		std::string cfgFile;

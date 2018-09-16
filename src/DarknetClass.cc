@@ -151,6 +151,17 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 	worker->Queue();
 }
 
+detection *DarknetClass::predictWithoutMemory(int *nboxes, int w, int h) {
+	return get_network_boxes(net, w, h, thresh, hier_thresh, 0, 1, nboxes);
+}
+
+detection *DarknetClass::predictWithMemory(int *nboxes, int w, int h) {
+	return network_avg_predictions(net, net_size_total,
+																 memory, memorySlotsUsed,
+																 nboxes, w, h,
+																 thresh, hier_thresh);
+}
+
 void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -167,6 +178,9 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	auto *worker = new PredictWorker(
 			this,
 			this->net,
+			this->net_size_total,
+			this->memory,
+			this->memorySlotsUsed,
 			w, h,
 			this->thresh,
 			this->hier_thresh,

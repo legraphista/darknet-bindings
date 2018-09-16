@@ -11,8 +11,13 @@
 class PredictWorker : public Napi::AsyncWorker {
 private:
 		float *input;
-		network *net;
 		DarknetClass *darknetClass;
+
+		network *net;
+		int net_size_total;
+
+		float **memory;
+		int memorySlotsUsed;
 
 		int nboxes = 0;
 		detection *dets;
@@ -21,18 +26,23 @@ private:
 		float thresh, hier;
 public:
 		PredictWorker(
-				DarknetClass *darknetClass, network *net,
+				DarknetClass *darknetClass,
+				network *net, int net_size_total,
+				float **memory, int memorySlotsUsed,
 				int w, int h,
 				float thresh, float hier,
-				float* image_pointer,
+				float *image_pointer,
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
+			// todo clean unnecessary arguments
 			input = image_pointer;
-//			printf("Memory letterbox 2 %x\n", &input);
 
 			this->darknetClass = darknetClass;
 			this->net = net;
+			this->net_size_total = net_size_total;
+			this->memory = memory;
+			this->memorySlotsUsed = memorySlotsUsed;
 			this->w = w;
 			this->h = h;
 			this->thresh = thresh;
@@ -42,7 +52,9 @@ public:
 		void Execute() {
 			network_predict(net, input);
 			darknetClass->rememberNet();
-			dets = get_network_boxes(net, w, h, thresh, hier, 0, 1, &nboxes);
+			// todo add toggle
+//			dets = darknetClass->predictWithoutMemory(&nboxes, w, h);
+			dets = darknetClass->predictWithMemory(&nboxes, w, h);
 		}
 
 		void OnOK() {
