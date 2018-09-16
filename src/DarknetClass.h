@@ -18,9 +18,11 @@ public:
 		~DarknetClass();
 
 		void resetMemory(const Napi::CallbackInfo& info);
+		void rememberNet();
 
 		void rgbToDarknet(const Napi::CallbackInfo& info);
 		void letterbox(const Napi::CallbackInfo& info);
+		void predict(const Napi::CallbackInfo& info);
 private:
 
 		std::string cfgFile;

@@ -8,6 +8,7 @@
 #include "node_api_types.h"
 #include "workers/rgb-to-darknet.h"
 #include "workers/letterbox.h"
+#include "workers/predict.h"
 
 using namespace Napi;
 using namespace std;
@@ -18,7 +19,8 @@ Object Init(Env env, Object exports) {
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
 			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet),
-			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox)
+			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox),
+			DarknetClass::InstanceMethod("predict", &DarknetClass::predict)
 	});
 
 	exports.Set("DarknetClass", func);
@@ -101,6 +103,15 @@ void DarknetClass::resetMemory(const Napi::CallbackInfo &info) {
 	this->makeMemory();
 }
 
+void DarknetClass::rememberNet() {
+	network_remember_memory(this->net, this->memory, this->memoryIndex);
+	this->memoryIndex = (this->memoryIndex + 1) % this->memoryCount;
+	this->memorySlotsUsed = this->memorySlotsUsed + 1;
+	if (this->memorySlotsUsed > this->memoryCount) {
+		this->memorySlotsUsed = this->memoryCount;
+	}
+}
+
 void DarknetClass::rgbToDarknet(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	assert(info.Length() == 5, "There must be 4 params passed");
@@ -117,7 +128,7 @@ void DarknetClass::rgbToDarknet(const Napi::CallbackInfo &info) {
 
 void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-	assert(info.Length() == 5, "There must be 4 params passed");
+	assert(info.Length() == 5, "There must be 5 params passed");
 	auto imageBuffer = info[0].As<Float32Array>();
 	int w = info[1].ToNumber();
 	int h = info[2].ToNumber();
@@ -128,6 +139,17 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 	int dh = this->net->h;
 
 	auto *worker = new DarknetLetterboxWorker(imageBuffer, w, h, c, dw, dh, callback);
+	worker->Queue();
+}
+
+void DarknetClass::predict(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	assert(info.Length() == 2, "There must be 1 param passed");
+	auto image_pointer_buffer = info[0].As<Napi::Buffer<char>>();
+	auto callback = info[1].As<Function>();
+
+	auto *worker = new PredictWorker(this, this->net, image_pointer_buffer, callback);
 	worker->Queue();
 }
 
