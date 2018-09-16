@@ -18,7 +18,7 @@ private:
 
 public:
 		NMSWorker(
-				Napi::Buffer<char> dets_data_pointer, int nboxes,
+				detection *dets, int nboxes,
 				unsigned int classes, float nms,
 				Napi::Function &callback
 		) : AsyncWorker(callback) {
@@ -27,7 +27,7 @@ public:
 			this->classes = classes;
 			this->nms = nms;
 
-			dets = ref_unref_from_napi_buffer<detection *>(dets_data_pointer);
+			this->dets = dets;
 		}
 
 		void Execute() {

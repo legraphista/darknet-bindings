@@ -144,7 +144,7 @@ void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
 	int dh = this->net->h;
 
 	// make a copy in case JS decides to GC this
-	float* imageCopy = (float *) malloc(imageBuffer.ByteLength());
+	float *imageCopy = (float *) malloc(imageBuffer.ByteLength());
 	memcpy(imageCopy, imageBuffer.Data(), imageBuffer.ByteLength());
 
 	auto *worker = new DarknetLetterboxWorker(imageCopy, w, h, c, dw, dh, callback);
@@ -163,7 +163,7 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 
 	auto callback = info[3].As<Function>();
 
-	float* image_pointer = ref_unref_from_napi_buffer<float*>(image_pointer_buffer);
+	float *image_pointer = ref_unref_from_napi_buffer<float *>(image_pointer_buffer);
 
 	auto *worker = new PredictWorker(
 			this,
@@ -184,7 +184,8 @@ void DarknetClass::nms(const Napi::CallbackInfo &info) {
 	assert(nboxes >= 0, "cannot have negative box count");
 	auto callback = info[2].As<Function>();
 
-	auto *worker = new NMSWorker(dets_pointer_buffer, nboxes, this->classes, this->nms_thresh, callback);
+	detection *dets = ref_unref_from_napi_buffer<detection *>(dets_pointer_buffer);
+	auto *worker = new NMSWorker(dets, nboxes, this->classes, this->nms_thresh, callback);
 	worker->Queue();
 }
 
