@@ -92,6 +92,8 @@ void DarknetClass::freeMemory() {
 	network_memory_free(this->memory, this->memoryCount);
 }
 
+// This is dangerous as other threads might be using it
+// todo add this in readme
 void DarknetClass::resetMemory(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
