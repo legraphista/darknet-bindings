@@ -1,17 +1,17 @@
-# darknet-binding
-Nodejs darknet native bindings
+# Darknet NodeJS Bindings
 
-## Docs TBD
+_Bindings over the inference api of darknet, using N-API._
 
-### Todo
-- Docs
-- Tests
-- TS typings
-- Ability pass thresholds as arguments
-- Cleanup of constructor
-- Cleanup of main class (nms doesn't need to be part of the instance, it's static)
+## Docs
+Can be found in [docs.md](https://github.com/legraphista/darknet-binding/blob/master/docs.md)
 
-### Caveats
-- No Windows support (if you're brave enough...?)
-- I'm still writing it
-- ...?
+## Roadmap
+- [x] Docs
+- [ ] Tests
+- [ ] TS typings
+- [ ] More relaxed method calls (pass args & thresholds in methods too)
+- [ ] Cleanup
+
+## Caveats
+- No native Windows support (help is welcome)
+- Project is still in its infancy, stability hasn't been fully tested yet 
