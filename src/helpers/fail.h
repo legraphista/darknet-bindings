@@ -4,6 +4,7 @@
 
 #ifndef DARKNET_BINDINGS_FAIL_H
 #define DARKNET_BINDINGS_FAIL_H
+#include <memory>
 
 template<typename ... Args>
 static std::string format(const std::string& format, Args ... args) {
