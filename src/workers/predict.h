@@ -14,39 +14,25 @@ private:
 		DarknetClass *darknetClass;
 
 		network *net;
-		int net_size_total;
-
-		float **memory;
-		int memorySlotsUsed;
-
 		int nboxes = 0;
 		detection *dets;
 
 		int w, h;
-		float thresh, hier;
 public:
 		PredictWorker(
 				DarknetClass *darknetClass,
-				network *net, int net_size_total,
-				float **memory, int memorySlotsUsed,
+				network *net,
 				int w, int h,
-				float thresh, float hier,
 				float *image_pointer,
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
-			// todo clean unnecessary arguments
 			input = image_pointer;
 
 			this->darknetClass = darknetClass;
 			this->net = net;
-			this->net_size_total = net_size_total;
-			this->memory = memory;
-			this->memorySlotsUsed = memorySlotsUsed;
 			this->w = w;
 			this->h = h;
-			this->thresh = thresh;
-			this->hier = hier;
 		}
 
 		void Execute() {

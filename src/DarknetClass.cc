@@ -180,12 +180,7 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	auto *worker = new PredictWorker(
 			this,
 			this->net,
-			this->net_size_total,
-			this->memory,
-			this->memorySlotsUsed,
 			w, h,
-			this->thresh,
-			this->hier_thresh,
 			image_pointer,
 			callback);
 	worker->Queue();

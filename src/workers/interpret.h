@@ -7,9 +7,10 @@
 
 #include <napi.h>
 #include <darknet.h>
+#include <cmath>
 
 struct Prediction {
-		std::vector<std::string> names;
+		std::vector <std::string> names;
 		std::vector<float> probabilities;
 		int top, left, bottom, right;
 		float x, y, w, h;
@@ -28,15 +29,15 @@ private:
 		int w;
 		int h;
 		unsigned int classes;
-		std::vector<std::string> names;
+		std::vector <std::string> names;
 
-		std::vector<Prediction> predictions;
+		std::vector <Prediction> predictions;
 
 public:
 		InterpretWorker(
 				detection *dets, int nboxes,
 				int w, int h, float thresh,
-				unsigned int classes, std::vector<std::string> names,
+				unsigned int classes, std::vector <std::string> names,
 				Napi::Function &callback
 		) : Napi::AsyncWorker(callback) {
 
