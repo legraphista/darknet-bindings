@@ -2,11 +2,11 @@
 // Created by Muscalu Stefan-Gabriel on 15/09/2018.
 //
 
-#ifndef DARKNET_BINDINGS_DARKNET_H
-#define DARKNET_BINDINGS_DARKNET_H
+#ifndef DARKNET_BINDINGS_DARKNETCLASS_H
+#define DARKNET_BINDINGS_DARKNETCLASS_H
 
 #include <napi.h>
-#include <darknet.h>
+#include "darknet.h"
 
 class DarknetClass : public Napi::ObjectWrap<DarknetClass> {
 
@@ -59,4 +59,4 @@ private:
 
 };
 
-#endif //DARKNET_BINDINGS_DARKNET_H
+#endif //DARKNET_BINDINGS_DARKNETCLASS_H

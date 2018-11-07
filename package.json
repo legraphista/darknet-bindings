@@ -11,6 +11,7 @@
     "configure": "node-gyp configure",
     "configure:xcode": "node-gyp configure -- -f xcode",
     "configure:cmake": "node-gyp configure -- -f cmake",
+    "cfg": "npm run configure && npm run configure:cmake && npm run configure:xcode",
     "clean": "node-gyp clean"
   },
   "author": "Stefan-Gabriel Muscalu <stefan.gabriel.muscalu@gmail.com> (http://my.corneroftheinternet.rocks/)",
