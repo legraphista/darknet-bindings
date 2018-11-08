@@ -13,7 +13,6 @@ using namespace Napi;
 using namespace std;
 
 Object DarknetClass::Init(Napi::Env env, Object exports) {
-	Napi::HandleScope scope(env);
 
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
 			DarknetClass::InstanceAccessor("netWidth", &DarknetClass::GetNetWidth, nullptr),
@@ -31,7 +30,6 @@ Object DarknetClass::Init(Napi::Env env, Object exports) {
 DarknetClass::DarknetClass(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DarknetClass>(info) {
 
 	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
 
 	assert(info.Length() == 1, "Must pass exactly one parameter!");
 

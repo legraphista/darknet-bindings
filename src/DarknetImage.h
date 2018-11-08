@@ -91,7 +91,6 @@ namespace DarknetImageWorkers {
 
 				void OnOK() {
 					Napi::Env env = Env();
-					Napi::HandleScope scope(env);
 
 					imageBufferReference.Unref();
 					/*
@@ -141,7 +140,6 @@ namespace DarknetImageWorkers {
 
 				void OnOK() {
 					Napi::Env env = Env();
-					Napi::HandleScope scope(env);
 
 					uint32_t len = (
 							(uint32_t) output.w *

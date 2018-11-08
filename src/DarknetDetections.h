@@ -66,7 +66,6 @@ namespace DarknetDetectionsWorkers {
 
 				void OnOK() {
 					Napi::Env env = Env();
-					Napi::HandleScope scope(env);
 					Callback().Call({env.Undefined(), env.Undefined()});
 				}
 		};

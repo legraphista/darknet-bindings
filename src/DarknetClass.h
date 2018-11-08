@@ -98,7 +98,6 @@ namespace DarknetClassWorkers {
 
 				void OnOK() {
 					Napi::Env env = Env();
-					Napi::HandleScope scope(env);
 
 					Napi::Object r = DarknetDetections::constructor
 							.New({
