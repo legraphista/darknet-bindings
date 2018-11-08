@@ -56,6 +56,7 @@ namespace DarknetImageWorkers {
 				Napi::Reference<Napi::Uint8Array> imageBufferReference;
 				uint32_t w, h, c;
 				float *output;
+				uint8_t *input;
 		public:
 
 				RGB2DarknetImage(
@@ -64,6 +65,7 @@ namespace DarknetImageWorkers {
 						uint32_t w, uint32_t h, uint32_t c
 				) : Napi::AsyncWorker(callback) {
 
+					this->input = imageBuffer.Data();
 					this->imageBufferReference = Napi::Persistent<Napi::Uint8Array>(imageBuffer);
 					this->w = w;
 					this->h = h;
@@ -71,8 +73,6 @@ namespace DarknetImageWorkers {
 				}
 
 				void Execute() {
-					uint8_t *input = imageBufferReference.Value().Data();
-
 					this->output = output = (float *) malloc(w * h * c * sizeof(float));
 
 					uint32_t step = w * c;
