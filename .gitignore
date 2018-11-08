@@ -6,6 +6,7 @@ libdarknet.so
 node_modules/
 test.js
 testjs.js
+test-flow.js
 crash.log
 .DS_Store
 yolov3.weights

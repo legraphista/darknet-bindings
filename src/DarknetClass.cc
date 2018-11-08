@@ -12,16 +12,16 @@
 #include "workers/nms.h"
 #include "workers/interpret.h"
 
+#include "DarknetImage.h"
+
 using namespace Napi;
 using namespace std;
 
-Object Init(Env env, Object exports) {
+Object DarknetClass::Init(Napi::Env env, Object exports) {
 	Napi::HandleScope scope(env);
 
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
-			DarknetClass::InstanceMethod("rgbToDarknet", &DarknetClass::rgbToDarknet),
-			DarknetClass::InstanceMethod("letterbox", &DarknetClass::letterbox),
 			DarknetClass::InstanceMethod("predict", &DarknetClass::predict),
 			DarknetClass::InstanceMethod("nms", &DarknetClass::nms),
 			DarknetClass::InstanceMethod("interpret", &DarknetClass::interpret)
@@ -119,40 +119,6 @@ void DarknetClass::rememberNet() {
 	}
 }
 
-void DarknetClass::rgbToDarknet(const Napi::CallbackInfo &info) {
-	Napi::Env env = info.Env();
-	assert(info.Length() == 5, "There must be 4 params passed");
-
-	auto imageBuffer = info[0].As<Uint8Array>();
-	int w = info[1].ToNumber();
-	int h = info[2].ToNumber();
-	int c = info[3].ToNumber();
-	auto callback = info[4].As<Function>();
-
-	auto *worker = new RGB2DarknetWorker(imageBuffer, w, h, c, callback);
-	worker->Queue();
-}
-
-void DarknetClass::letterbox(const Napi::CallbackInfo &info) {
-	Napi::Env env = info.Env();
-	assert(info.Length() == 5, "There must be 5 params passed");
-	auto imageBuffer = info[0].As<Float32Array>();
-	int w = info[1].ToNumber();
-	int h = info[2].ToNumber();
-	int c = info[3].ToNumber();
-	auto callback = info[4].As<Function>();
-
-	int dw = this->net->w;
-	int dh = this->net->h;
-
-	// make a copy in case JS decides to GC this
-	float *imageCopy = (float *) malloc(imageBuffer.ByteLength());
-	memcpy(imageCopy, imageBuffer.Data(), imageBuffer.ByteLength());
-
-	auto *worker = new DarknetLetterboxWorker(imageCopy, w, h, c, dw, dh, callback);
-	worker->Queue();
-}
-
 detection *DarknetClass::predictWithoutMemory(int *nboxes, int w, int h) {
 	return get_network_boxes(net, w, h, thresh, hier_thresh, 0, 1, nboxes);
 }
@@ -167,22 +133,16 @@ detection *DarknetClass::predictWithMemory(int *nboxes, int w, int h) {
 void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	assert(info.Length() == 4, "There must be 4 param passed");
-	auto image_pointer_buffer = info[0].As<Napi::External<float>>();
-	int w = info[1].ToNumber();
-	assert(w > 0, "invalid width");
-	int h = info[2].ToNumber();
-	assert(h > 0, "invalid height");
+	auto *image = DarknetImage::Unwrap(info[0].ToObject());
 
-	auto callback = info[3].As<Function>();
-	float *image_pointer = image_pointer_buffer.Data();
+	auto callback = info[1].As<Function>();
 
-	auto *worker = new PredictWorker(
+	auto *worker = new DarknetClassWorkers::Predict(
+			callback,
 			this,
-			this->net,
-			w, h,
-			image_pointer,
-			callback);
+			image,
+			this->net
+	);
 	worker->Queue();
 }
 
@@ -224,5 +184,3 @@ void DarknetClass::interpret(const Napi::CallbackInfo &info) {
 	);
 	worker->Queue();
 }
-
-NODE_API_MODULE(darknet, Init);

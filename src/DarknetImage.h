@@ -7,6 +7,8 @@
 
 #include <napi.h>
 #include "darknet_external.h"
+#include "helpers/c_helpers.h"
+#include "helpers/fail.h"
 
 class DarknetImage : public Napi::ObjectWrap<DarknetImage> {
 public:
@@ -28,11 +30,22 @@ public:
 
 		image const &get_image() const;
 
+		uint32_t const original_width() const;
+
+		uint32_t const original_height() const;
+
+		uint32_t const width() const;
+
+		uint32_t const height() const;
+
 private:
 		void release();
 
 		Napi::Float32Array _original_data;
 		image _image;
+
+		uint32_t _original_w = 0;
+		uint32_t _original_h = 0;
 };
 
 namespace DarknetImageWorkers {
@@ -82,25 +95,9 @@ namespace DarknetImageWorkers {
 						and we also make sure we free it
 					 */
 
-					auto arrView = Napi::ArrayBuffer::New(
-							env,
-							output,
-							w * h * c * sizeof(float),
-							[](Napi::Env /*env*/, void *finalizeData) {
-									free(finalizeData);
-							}
-					);
-
-					Napi::Float32Array out = Napi::Float32Array::New(
-							env,
-							w * h * c,
-							arrView,
-							0
-					);
-
 					auto dnImage = DarknetImage::constructor.New(
 							{
-									out,
+									float2js(env, output, w * h * c),
 									Napi::Number::New(env, w),
 									Napi::Number::New(env, h),
 									Napi::Number::New(env, c)
@@ -142,30 +139,20 @@ namespace DarknetImageWorkers {
 					Napi::Env env = Env();
 					Napi::HandleScope scope(env);
 
-					uint32_t len = output.w * output.h * output.c;
-
-					auto arrView = Napi::ArrayBuffer::New(
-							env,
-							output.data,
-							len * sizeof(float),
-							[](Napi::Env /*env*/, void *finalizeData) {
-									free(finalizeData);
-							}
-					);
-
-					Napi::Float32Array out = Napi::Float32Array::New(
-							env,
-							len,
-							arrView,
-							0
+					uint32_t len = (
+							(uint32_t) output.w *
+							(uint32_t) output.h *
+							(uint32_t) output.c
 					);
 
 					auto dnImage = DarknetImage::constructor.New(
 							{
-									out,
+									float2js(env, output.data, len),
 									Napi::Number::New(env, output.w),
 									Napi::Number::New(env, output.h),
-									Napi::Number::New(env, output.c)
+									Napi::Number::New(env, output.c),
+									Napi::Number::New(env, darknetImage->width()),
+									Napi::Number::New(env, darknetImage->height())
 							}
 					);
 

@@ -40,6 +40,41 @@ DarknetImage::DarknetImage(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Da
 	_image.w = info[1].ToNumber();
 	_image.h = info[2].ToNumber();
 	_image.c = info[3].ToNumber();
+
+	_original_w = info.Length() > 4 ?
+								info[4].ToNumber() :
+								(uint32_t) _image.w;
+	_original_h = info.Length() > 5 ?
+								info[5].ToNumber() :
+								(uint32_t) _image.h;
+}
+
+uint32_t const DarknetImage::original_width() const {
+	return _original_w;
+}
+
+uint32_t const DarknetImage::original_height() const {
+	return _original_h;
+}
+
+uint32_t const DarknetImage::width() const {
+	return (uint32_t) _image.w;
+}
+
+uint32_t const DarknetImage::height() const {
+	return (uint32_t) _image.h;
+}
+
+DarknetImage::~DarknetImage() {
+	this->release();
+}
+
+void DarknetImage::Release(const Napi::CallbackInfo &info) {
+	this->release();
+}
+
+void DarknetImage::release() {
+	// placebo??
 }
 
 image const &DarknetImage::get_image() const {
@@ -78,4 +113,8 @@ Napi::Value DarknetImage::LetterBox(const Napi::CallbackInfo &info) {
 	return env.Undefined();
 }
 
-
+Napi::Value DarknetImage::ToRGB(const Napi::CallbackInfo &info) {
+	// todo
+	Napi::Env env = info.Env();
+	js_failv("Not implemented yet!");
+}
