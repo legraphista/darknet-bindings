@@ -77,9 +77,9 @@ void DarknetImage::Release(const Napi::CallbackInfo &info) {
 }
 
 void DarknetImage::release() {
-	if (!_original_data.IsEmpty()) {
-		_original_data.Unref();
-	}
+	if (_released) return;
+	_released = true;
+	_original_data.Unref();
 }
 
 image const &DarknetImage::get_image() const {

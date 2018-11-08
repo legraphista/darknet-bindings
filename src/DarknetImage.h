@@ -39,6 +39,7 @@ public:
 		uint32_t const height() const;
 
 private:
+		bool _released = false;
 		void release();
 
 		Napi::Reference<Napi::Float32Array> _original_data;
