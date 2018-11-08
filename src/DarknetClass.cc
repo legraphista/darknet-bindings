@@ -6,11 +6,6 @@
 #include "helpers/object.h"
 
 #include "node_api_types.h"
-#include "workers/rgb-to-darknet.h"
-#include "workers/letterbox.h"
-#include "workers/predict.h"
-#include "workers/nms.h"
-#include "workers/interpret.h"
 
 #include "DarknetImage.h"
 
@@ -23,8 +18,6 @@ Object DarknetClass::Init(Napi::Env env, Object exports) {
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
 			DarknetClass::InstanceMethod("predict", &DarknetClass::predict),
-			DarknetClass::InstanceMethod("nms", &DarknetClass::nms),
-			DarknetClass::InstanceMethod("interpret", &DarknetClass::interpret)
 	});
 
 	exports.Set("DarknetClass", func);
@@ -53,9 +46,6 @@ DarknetClass::DarknetClass(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Da
 
 	if (options.Has("memoryCount")) {
 		this->memoryCount = options.Get("memoryCount").ToNumber();
-	}
-	if (options.Has("nms")) {
-		this->nms_thresh = options.Get("nms").ToNumber();
 	}
 	if (options.Has("thresh")) {
 		this->thresh = options.Get("thresh").ToNumber();
@@ -130,6 +120,18 @@ detection *DarknetClass::predictWithMemory(int *nboxes, int w, int h) {
 																 thresh, hier_thresh);
 }
 
+std::vector<std::string> &DarknetClass::get_names() {
+	return names;
+}
+
+uint32_t DarknetClass::get_classes_count() {
+	return classes;
+}
+
+float DarknetClass::get_thresh() {
+	return thresh;
+}
+
 void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -146,41 +148,3 @@ void DarknetClass::predict(const Napi::CallbackInfo &info) {
 	worker->Queue();
 }
 
-void DarknetClass::nms(const Napi::CallbackInfo &info) {
-	Napi::Env env = info.Env();
-	assert(info.Length() == 3, "There must be 3 param passed");
-	auto dets_pointer_buffer = info[0].As<Napi::External<detection>>();
-	int nboxes = info[1].ToNumber();
-	assert(nboxes >= 0, "cannot have negative box count");
-	auto callback = info[2].As<Function>();
-
-	detection *dets = dets_pointer_buffer.Data();
-	auto *worker = new NMSWorker(dets, nboxes, this->classes, this->nms_thresh, callback);
-	worker->Queue();
-}
-
-void DarknetClass::interpret(const Napi::CallbackInfo &info) {
-	Napi::Env env = info.Env();
-	assert(info.Length() == 5, "There must be 5 param passed");
-
-	auto dets_pointer_buffer = info[0].As<Napi::External<detection>>();
-	int nboxes = info[1].ToNumber();
-	assert(nboxes >= 0, "cannot have negative box count");
-
-	int w = info[2].ToNumber();
-	assert(w > 0, "invalid width");
-	int h = info[3].ToNumber();
-	assert(h > 0, "invalid height");
-	auto callback = info[4].As<Function>();
-
-	detection *dets = dets_pointer_buffer.Data();
-	auto *worker = new InterpretWorker(
-			dets, nboxes,
-			w, h,
-			this->thresh,
-			this->classes,
-			this->names,
-			callback
-	);
-	worker->Queue();
-}

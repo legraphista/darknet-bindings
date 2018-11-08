@@ -8,6 +8,7 @@
 #include <napi.h>
 #include "darknet.h"
 #include "DarknetImage.h"
+#include "DarknetDetections.h"
 
 class DarknetClass : public Napi::ObjectWrap<DarknetClass> {
 
@@ -24,24 +25,25 @@ public:
 
 		void predict(const Napi::CallbackInfo &info);
 
-		void nms(const Napi::CallbackInfo &info);
-
-		void interpret(const Napi::CallbackInfo &info);
-
 		detection *predictWithoutMemory(int *nboxes, int w, int h);
 
 		detection *predictWithMemory(int *nboxes, int w, int h);
+
+		std::vector<std::string> &get_names();
+
+		uint32_t get_classes_count();
+
+		float get_thresh();
 
 private:
 
 		std::string cfgFile;
 		std::string weightsFile;
 		std::vector<std::string> names;
-		unsigned int classes = 0;
+		uint32_t classes = 0;
 
 		float thresh = 0.5;
 		float hier_thresh = 0.5;
-		float nms_thresh = 0.4;
 
 		int net_size_total = 0;
 		network *net;
@@ -95,11 +97,19 @@ namespace DarknetClassWorkers {
 					Napi::Env env = Env();
 					Napi::HandleScope scope(env);
 
+					Napi::Object r = DarknetDetections::constructor
+							.New({
+											 Napi::External<detection>::New(env, dets),
+											 Napi::Number::New(env, nboxes),
+											 Napi::External<std::vector<std::string>>::New(env, &darknetClass->get_names()),
+											 Napi::Number::New(env, darknetClass->get_classes_count()),
+											 Napi::Number::New(env, darknetImage->original_width()),
+											 Napi::Number::New(env, darknetImage->original_height()),
+											 Napi::Number::New(env, darknetClass->get_thresh())
+									 });
+
 					// todo make this as DarknetDetection
-					Napi::Object ret = Napi::Object::New(Env());
-					ret["count"] = Napi::Number::New(Env(), nboxes);
-					ret["data_pointer"] = Napi::External<detection>::New(Env(), dets);
-					Callback().Call({Env().Undefined(), ret});
+					Callback().Call({Env().Undefined(), r});
 				}
 		};
 }

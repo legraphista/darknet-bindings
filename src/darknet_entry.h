@@ -7,6 +7,7 @@
 
 #include "DarknetClass.h"
 #include "DarknetImage.h"
+#include "DarknetDetections.h"
 #include <napi.h>
 
 #endif //DARKNET_BINDINGS_DARKNET_ENTRY_H

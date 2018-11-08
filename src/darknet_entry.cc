@@ -10,6 +10,7 @@ Object Init(Napi::Env env, Object exports) {
 
 	DarknetImage::Init(env, exports);
 	DarknetClass::Init(env, exports);
+	DarknetDetections::Init(env, exports);
 
 	return exports;
 }
