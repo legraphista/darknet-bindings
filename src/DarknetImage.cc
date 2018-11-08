@@ -36,9 +36,9 @@ Object DarknetImage::Init(Napi::Env env, Object exports) {
 
 DarknetImage::DarknetImage(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DarknetImage>(info) {
 
-	_original_data = info[0].As<Float32Array>();
+	_original_data = Napi::Persistent<Float32Array>(info[0].As<Float32Array>());
 
-	_image.data = _original_data.Data();
+	_image.data = _original_data.Value().Data();
 
 	_image.w = info[1].ToNumber();
 	_image.h = info[2].ToNumber();
@@ -77,7 +77,9 @@ void DarknetImage::Release(const Napi::CallbackInfo &info) {
 }
 
 void DarknetImage::release() {
-	// placebo??
+	if (!_original_data.IsEmpty()) {
+		_original_data.Unref();
+	}
 }
 
 image const &DarknetImage::get_image() const {

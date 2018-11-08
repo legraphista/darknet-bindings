@@ -41,7 +41,7 @@ public:
 private:
 		void release();
 
-		Napi::Float32Array _original_data;
+		Napi::Reference<Napi::Float32Array> _original_data;
 		image _image;
 
 		uint32_t _original_w = 0;

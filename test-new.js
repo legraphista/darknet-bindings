@@ -46,7 +46,9 @@ function printMem() {
   const frame = video.read().cvtColor(cv.COLOR_BGR2RGB);
   video.release();
 
+  printMem();
   for (let i = 0; i < 1000; i++) {
+    console.log(i);
     global.gc();
     const image = await DarknetImage.fromRGB(
       frame.getData(),
@@ -63,6 +65,7 @@ function printMem() {
     global.gc();
     const interpretations = detections.interpret();
     global.gc();
+    printMem();
   }
 
 })();
