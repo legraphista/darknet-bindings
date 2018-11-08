@@ -19,6 +19,9 @@ public:
 
 		~DarknetClass();
 
+		Napi::Value GetNetWidth(const Napi::CallbackInfo &info);
+		Napi::Value GetNetHeight(const Napi::CallbackInfo &info);
+
 		void resetMemory(const Napi::CallbackInfo &info);
 
 		void rememberNet();

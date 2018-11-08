@@ -15,13 +15,16 @@ Object DarknetImage::Init(Napi::Env env, Object exports) {
 			InstanceMethod("release", &DarknetImage::Release,
 										 napi_property_attributes::napi_enumerable),
 			InstanceMethod("toRGB", &DarknetImage::ToRGB,
-										 napi_property_attributes::napi_enumerable),
+										 (napi_property_attributes) (napi_property_attributes::napi_enumerable |
+																								 napi_property_attributes::napi_writable)),
 			InstanceMethod("letterbox", &DarknetImage::LetterBox,
-										 napi_property_attributes::napi_enumerable),
+										 (napi_property_attributes) (napi_property_attributes::napi_enumerable |
+																								 napi_property_attributes::napi_writable)),
 
 			StaticMethod("fromRGB", &DarknetImage::FromRGB,
 									 (napi_property_attributes) (napi_property_attributes::napi_enumerable |
-																							 napi_property_attributes::napi_static))
+																							 napi_property_attributes::napi_static |
+																							 napi_property_attributes::napi_writable))
 	});
 
 	constructor = Napi::Persistent(func);

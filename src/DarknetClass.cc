@@ -16,11 +16,15 @@ Object DarknetClass::Init(Napi::Env env, Object exports) {
 	Napi::HandleScope scope(env);
 
 	Napi::Function func = DarknetClass::DefineClass(env, "DarknetClass", {
+			DarknetClass::InstanceAccessor("netWidth", &DarknetClass::GetNetWidth, nullptr),
+			DarknetClass::InstanceAccessor("netHeight", &DarknetClass::GetNetHeight, nullptr),
 			DarknetClass::InstanceMethod("resetMemory", &DarknetClass::resetMemory),
-			DarknetClass::InstanceMethod("predict", &DarknetClass::predict),
+			DarknetClass::InstanceMethod("predict", &DarknetClass::predict,
+																	 (napi_property_attributes) (napi_property_attributes::napi_enumerable |
+																															 napi_property_attributes::napi_writable)),
 	});
 
-	exports.Set("DarknetClass", func);
+	exports.Set("Darknet", func);
 	return exports;
 }
 
@@ -70,6 +74,16 @@ DarknetClass::~DarknetClass() {
 	this->freeMemory();
 	free_network(this->net);
 	this->names.clear();
+}
+
+Napi::Value DarknetClass::GetNetWidth(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	return Number::New(env, this->net->w);
+}
+
+Napi::Value DarknetClass::GetNetHeight(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+	return Number::New(env, this->net->h);
 }
 
 void DarknetClass::makeMemory() {

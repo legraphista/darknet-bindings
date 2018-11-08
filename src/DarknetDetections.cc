@@ -15,6 +15,11 @@ Object DarknetDetections::Init(Napi::Env env, Object exports) {
 
 			InstanceMethod("release", &DarknetDetections::Release,
 										 napi_property_attributes::napi_enumerable),
+			InstanceMethod("interpret", &DarknetDetections::Interepret,
+										 napi_property_attributes::napi_enumerable),
+			InstanceMethod("doNMS", &DarknetDetections::DoNMS,
+										 (napi_property_attributes) (napi_property_attributes::napi_enumerable |
+																								 napi_property_attributes::napi_writable)),
 	});
 
 	constructor = Napi::Persistent(func);
@@ -79,7 +84,8 @@ void DarknetDetections::DoNMS(const Napi::CallbackInfo &info) {
 Napi::Value DarknetDetections::Interepret(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	Array output = Array::New(env, _nb_detections);
+	Array output = Array::New(env);
+	uint32_t output_len = 0;
 	for (uint32_t i = 0; i < _nb_detections; i++) {
 		detection d = _detections[i];
 
@@ -106,6 +112,10 @@ Napi::Value DarknetDetections::Interepret(const Napi::CallbackInfo &info) {
 
 				cnt++;
 			}
+		}
+
+		if (cnt == 0) {
+			continue;
 		}
 
 		detection["names"] = names;
@@ -159,7 +169,7 @@ Napi::Value DarknetDetections::Interepret(const Napi::CallbackInfo &info) {
 		detection["width"] = width;
 		detection["height"] = height;
 
-		output[i] = detection;
+		output[output_len++] = detection;
 	}
 	return output;
 }
