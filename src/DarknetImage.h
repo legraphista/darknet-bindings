@@ -9,7 +9,6 @@
 #include "darknet_external.h"
 #include "helpers/c_helpers.h"
 #include "helpers/fail.h"
-#include <ctime>
 
 class DarknetImage : public Napi::ObjectWrap<DarknetImage> {
 public:
@@ -24,6 +23,8 @@ public:
     void Release(const Napi::CallbackInfo &info);
 
     static Napi::Value FromRGB(const Napi::CallbackInfo &info);
+
+    static Napi::Value FromPlanarRGB(const Napi::CallbackInfo &info);
 
     Napi::Value LetterBox(const Napi::CallbackInfo &info);
 
@@ -53,6 +54,8 @@ private:
 
 namespace DarknetImageWorkers {
 
+    const float div255multiplier = 1.0f / 255.0f;
+
     class RGB2DarknetImage : public Napi::AsyncWorker {
 
     private:
@@ -76,7 +79,7 @@ namespace DarknetImageWorkers {
         }
 
         void Execute() {
-          this->output = output = (float *) malloc(w * h * c * sizeof(float));
+          this->output = (float *) malloc(w * h * c * sizeof(float));
 
           size_t step = w * c;
           size_t i, j, k;
@@ -126,7 +129,7 @@ namespace DarknetImageWorkers {
                 // set pixel for channel at i, j
                 planar_channel_row_out[j] =
                     // to pixel from row i, column j, channel k
-                    interlaced_row_channel_offset[j * c] / 255.0f;
+                    interlaced_row_channel_offset[j * c] * div255multiplier;
               }
             }
           }
@@ -137,6 +140,84 @@ namespace DarknetImageWorkers {
           Napi::Env env = Env();
 
           imageBufferReference.Unref();
+          /*
+            we pass back a view with the raw float* data
+            and we also make sure we free it
+           */
+
+          auto dnImage = DarknetImage::constructor.New(
+              {
+                  float2js(env, output, w * h * c),
+                  Napi::Number::New(env, w),
+                  Napi::Number::New(env, h),
+                  Napi::Number::New(env, c)
+              }
+          );
+
+          Callback().Call({env.Undefined(), dnImage});
+        }
+
+    };
+
+    class PlanarRGB2DarknetImage : public Napi::AsyncWorker {
+
+    private:
+        Napi::Reference<Napi::Uint8Array> ref_r;
+        Napi::Reference<Napi::Uint8Array> ref_g;
+        Napi::Reference<Napi::Uint8Array> ref_b;
+        uint32_t w, h;
+        uint32_t c = 3;
+        float *output;
+        uint8_t *input_r;
+        uint8_t *input_g;
+        uint8_t *input_b;
+    public:
+
+        PlanarRGB2DarknetImage(
+            Napi::Function &callback,
+            Napi::Uint8Array &r,
+            Napi::Uint8Array &g,
+            Napi::Uint8Array &b,
+            uint32_t w, uint32_t h
+        ) : Napi::AsyncWorker(callback) {
+
+          this->input_r = r.Data();
+          this->input_g = g.Data();
+          this->input_b = b.Data();
+          this->ref_r = Napi::Persistent<Napi::Uint8Array>(r);
+          this->ref_g = Napi::Persistent<Napi::Uint8Array>(g);
+          this->ref_b = Napi::Persistent<Napi::Uint8Array>(b);
+          this->w = w;
+          this->h = h;
+        }
+
+        void Execute() {
+          size_t channel_size = w * h;
+          output = (float *) malloc(channel_size * c * sizeof(float));
+
+          float *output_channel = nullptr;
+          size_t i = 0;
+
+          output_channel = output;
+          for (i = 0; i < channel_size; i++) {
+            output_channel[i] = input_r[i] * div255multiplier;
+          }
+          output_channel = output + channel_size;
+          for (i = 0; i < channel_size; i++) {
+            output_channel[i] = input_g[i] * div255multiplier;
+          }
+          output_channel = output + channel_size + channel_size;
+          for (i = 0; i < channel_size; i++) {
+            output_channel[i] = input_b[i] * div255multiplier;
+          }
+        }
+
+        void OnOK() {
+          Napi::Env env = Env();
+
+          ref_r.Unref();
+          ref_g.Unref();
+          ref_b.Unref();
           /*
             we pass back a view with the raw float* data
             and we also make sure we free it

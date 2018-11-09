@@ -57,9 +57,10 @@ function printMem() {
         global.gc();
 
         const buff = frame.getData();
+        const [r, g, b] = frame.splitChannels();
+        const [buff_r, buff_g, buff_b] = [r.getData(), g.getData(), b.getData()];
 
         for (let _ = 0; _ < 100; _++) {
-            console.time('cvt');
             const image = await DarknetImage.fromRGB(
                 buff,
                 frame.cols,
@@ -67,7 +68,16 @@ function printMem() {
                 3
             );
             image.release();
-            console.timeEnd('cvt');
+
+
+            const image2 = await DarknetImage.fromPlanarRGB(
+                buff_r,
+                buff_g,
+                buff_b,
+                frame.cols,
+                frame.rows,
+            );
+            image.release();
         }
         return;
 

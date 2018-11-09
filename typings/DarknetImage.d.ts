@@ -12,4 +12,6 @@ export class DarknetImage {
     letterbox(width: number, height: number): Promise<DarknetImage>;
 
     static fromRGB(buffer: Uint8Array, width: number, height: number, channels: number): Promise<DarknetImage>;
+
+    static fromPlanarRGB(r: Uint8Array, g: Uint8Array, b: Uint8Array, width: number, height: number): Promise<DarknetImage>;
 }
