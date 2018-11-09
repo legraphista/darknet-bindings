@@ -9,6 +9,7 @@
 #include "darknet_external.h"
 #include "helpers/c_helpers.h"
 #include "helpers/fail.h"
+#include <ctime>
 
 class DarknetImage : public Napi::ObjectWrap<DarknetImage> {
 public:
@@ -77,13 +78,55 @@ namespace DarknetImageWorkers {
         void Execute() {
           this->output = output = (float *) malloc(w * h * c * sizeof(float));
 
-          uint32_t step = w * c;
-          uint32_t i, j, k;
+          size_t step = w * c;
+          size_t i, j, k;
 
-          for (i = 0; i < h; ++i) {
-            for (k = 0; k < c; ++k) {
-              for (j = 0; j < w; ++j) {
-                output[k * w * h + i * w + j] = input[i * step + j * c + k] / 255.0f;
+// Original DarkNet Ipm_to_image with optimizations
+//
+//          size_t kwh_iw = 0;
+//          size_t iw = 0;
+//          size_t istep = 0;
+//          size_t istep_k = 0;
+//          for (i = 0; i < h; ++i) {
+//            iw = i * w;
+//            istep = i * step;
+//
+//            for (k = 0; k < c; ++k) {
+//              kwh_iw = k * w * h + iw;
+//              istep_k = istep + k;
+//
+//              for (j = 0; j < w; ++j) {
+//                output[kwh_iw + j] = input[istep_k + j * c] / 255.0f;
+//              }
+//            }
+//          }
+
+// rewritten ipl_to_image using pointer manipulation and caching
+// typically 3x faster, unless other optimizations kick in
+
+          float *planar_channel_out = nullptr;
+          float *planar_channel_row_out = nullptr;
+
+          uint8_t *interlaced_row_channel_offset = nullptr;
+
+          // interlaced rgb (rgbrgbrgbrgb)
+          // to planar rgb (rrrrrr.....bbbbbbb.....ggggggg)
+          for (k = 0; k < c; k++) {
+            // navigate to the planar channel data block
+            planar_channel_out = this->output + w * h * k;
+
+            for (i = 0; i < h; i++) {
+              // navigate to the interlace RGB line, offset by the channel
+              interlaced_row_channel_offset = this->input + i * step + k;
+              // cache planar row offset
+              planar_channel_row_out = planar_channel_out + i * w;
+
+              for (j = 0; j < w; j++) {
+
+                // set pixel for channel at i, j
+                planar_channel_row_out[j] =
+                    // to pixel from row i, column j, channel k
+                    interlaced_row_channel_offset[j * c] / 255.0f;
               }
             }
           }
