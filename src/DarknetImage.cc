@@ -79,7 +79,8 @@ void DarknetImage::Release(const Napi::CallbackInfo &info) {
 void DarknetImage::release() {
 	if (_released) return;
 	_released = true;
-	_original_data.Unref();
+	// we would unref here, but at destructor time, Napi::Reference releases the data
+	// _original_data.Unref();
 }
 
 image const &DarknetImage::get_image() const {

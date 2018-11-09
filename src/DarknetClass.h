@@ -13,107 +13,110 @@
 class DarknetClass : public Napi::ObjectWrap<DarknetClass> {
 
 public:
-		static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
 
-		DarknetClass(const Napi::CallbackInfo &info);
+    DarknetClass(const Napi::CallbackInfo &info);
 
-		~DarknetClass();
+    ~DarknetClass();
 
-		Napi::Value GetNetWidth(const Napi::CallbackInfo &info);
-		Napi::Value GetNetHeight(const Napi::CallbackInfo &info);
+    Napi::Value GetNetWidth(const Napi::CallbackInfo &info);
 
-		void resetMemory(const Napi::CallbackInfo &info);
+    Napi::Value GetNetHeight(const Napi::CallbackInfo &info);
 
-		void rememberNet();
+    void resetMemory(const Napi::CallbackInfo &info);
 
-		void predict(const Napi::CallbackInfo &info);
+    void rememberNet();
 
-		detection *predictWithoutMemory(int *nboxes, int w, int h);
+    void predict(const Napi::CallbackInfo &info);
 
-		detection *predictWithMemory(int *nboxes, int w, int h);
+    detection *predictWithoutMemory(int *nboxes, int w, int h);
 
-		std::vector<std::string> &get_names();
+    detection *predictWithMemory(int *nboxes, int w, int h);
 
-		uint32_t get_classes_count();
+    std::vector<std::string> &get_names();
 
-		float get_thresh();
+    uint32_t get_classes_count();
+
+    float get_thresh();
 
 private:
 
-		std::string cfgFile;
-		std::string weightsFile;
-		std::vector<std::string> names;
-		uint32_t classes = 0;
+    std::string cfgFile;
+    std::string weightsFile;
+    std::vector<std::string> names;
+    uint32_t classes = 0;
 
-		float thresh = 0.5;
-		float hier_thresh = 0.5;
+    float thresh = 0.5;
+    float hier_thresh = 0.5;
 
-		int net_size_total = 0;
-		network *net;
+    int net_size_total = 0;
+    network *net;
 
-		int memoryIndex = 0;
-		int memorySlotsUsed = 0;
-		int memoryCount = 3;
-		float **memory = nullptr;
+    int memoryIndex = 0;
+    int memorySlotsUsed = 0;
+    int memoryCount = 3;
+    float **memory = nullptr;
 
-		void makeMemory();
+    void makeMemory();
 
-		void freeMemory();
+    void freeMemory();
 
 };
 
 namespace DarknetClassWorkers {
-		class Predict : public Napi::AsyncWorker {
-		private:
-				DarknetImage *darknetImage;
-				DarknetClass *darknetClass;
-				network *net;
+    class Predict : public Napi::AsyncWorker {
+    private:
+        DarknetImage *darknetImage;
+        DarknetClass *darknetClass;
 
-				int nboxes = 0;
-				detection *dets = nullptr;
+        Napi::Reference<DarknetImage> _image_ref;
 
-		public:
+        network *net;
 
-				Predict(
-						Napi::Function &callback,
-						DarknetClass *darknetClass,
-						DarknetImage *darknetImage,
-						network *net
-				) : Napi::AsyncWorker(callback) {
+        int nboxes = 0;
+        detection *dets = nullptr;
 
-					this->darknetClass = darknetClass;
-					this->darknetImage = darknetImage;
-					this->net = net;
-				}
+    public:
 
-				void Execute() {
-					network_predict(net, darknetImage->get_image().data);
-					darknetClass->rememberNet();
-					// todo add toggle
-					// dets = darknetClass->predictWithoutMemory(&nboxes, w, h);
-					dets = darknetClass->predictWithMemory(&nboxes,
-																								 darknetImage->original_width(),
-																								 darknetImage->original_height());
-				}
+        Predict(
+            Napi::Function &callback,
+            DarknetClass *darknetClass,
+            DarknetImage *darknetImage,
+            network *net
+        ) : Napi::AsyncWorker(callback) {
 
-				void OnOK() {
-					Napi::Env env = Env();
+          this->darknetClass = darknetClass;
+          this->darknetImage = darknetImage;
+          this->net = net;
+        }
 
-					Napi::Object r = DarknetDetections::constructor
-							.New({
-											 Napi::External<detection>::New(env, dets),
-											 Napi::Number::New(env, nboxes),
-											 Napi::External<std::vector<std::string>>::New(env, &darknetClass->get_names()),
-											 Napi::Number::New(env, darknetClass->get_classes_count()),
-											 Napi::Number::New(env, darknetImage->original_width()),
-											 Napi::Number::New(env, darknetImage->original_height()),
-											 Napi::Number::New(env, darknetClass->get_thresh())
-									 });
+        void Execute() {
+          network_predict(net, darknetImage->get_image().data);
+          darknetClass->rememberNet();
+          // todo add toggle
+          // dets = darknetClass->predictWithoutMemory(&nboxes, w, h);
+          dets = darknetClass->predictWithMemory(&nboxes,
+                                                 darknetImage->original_width(),
+                                                 darknetImage->original_height());
+        }
 
-					// todo make this as DarknetDetection
-					Callback().Call({Env().Undefined(), r});
-				}
-		};
+        void OnOK() {
+          Napi::Env env = Env();
+
+          Napi::Object r = DarknetDetections::constructor
+              .New({
+                       Napi::External<detection>::New(env, dets),
+                       Napi::Number::New(env, nboxes),
+                       Napi::External<std::vector<std::string>>::New(env, &darknetClass->get_names()),
+                       Napi::Number::New(env, darknetClass->get_classes_count()),
+                       Napi::Number::New(env, darknetImage->original_width()),
+                       Napi::Number::New(env, darknetImage->original_height()),
+                       Napi::Number::New(env, darknetClass->get_thresh())
+                   });
+
+          Callback().Call({Env().Undefined(), r});
+        }
+    };
 }
 
 #endif //DARKNET_BINDINGS_DARKNETCLASS_H
