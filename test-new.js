@@ -40,6 +40,11 @@ function printMem() {
   // console.log('external', (external / 2 ** 20).toFixed(2));
 }
 
+(function gc_each_tick() {
+  global.gc();
+  setTimeout(gc_each_tick, 500);
+})();
+
 (async () => {
 
   video.set(cv.CAP_PROP_POS_FRAMES, 100);

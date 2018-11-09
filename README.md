@@ -6,11 +6,11 @@ _Bindings over the inference api of darknet, using N-API._
 Can be found in [docs.md](https://github.com/legraphista/darknet-binding/blob/master/docs.md)
 
 ## Roadmap
-- [x] Docs
+- [ ] Docs
 - [ ] Tests
-- [ ] TS typings
-- [ ] More relaxed method calls (pass args & thresholds in methods too)
-- [ ] Cleanup
+- [x] TS typings
+- [x] More relaxed method calls (pass args & thresholds in methods too)
+- [x] Cleanup
 
 ## Caveats
 - No native Windows support (help is welcome)
