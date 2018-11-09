@@ -139,19 +139,11 @@ Napi::Value DarknetDetections::Interepret(const Napi::CallbackInfo &info) {
     detection["box"] = box;
 
     // bounding box
-    auto top = (uint32_t) floor((b.y - b.h / 2) * _h);
-    auto bottom = (uint32_t) floor((b.y + b.h / 2) * _h);
+    auto top = (uint32_t) fmax(0, floor((b.y - b.h / 2) * _h));
+    auto bottom = (uint32_t) fmin(_h - 1, floor((b.y + b.h / 2) * _h));
 
-    if (bottom > _h - 1) {
-      bottom = _h - 1;
-    }
-
-    auto left = (uint32_t) floor((b.x - b.w / 2) * _w);
-    auto right = (uint32_t) floor((b.x + b.w / 2) * _w);
-
-    if (right > _w - 1) {
-      right = _w - 1;
-    }
+    auto left = (uint32_t) fmax(0, floor((b.x - b.w / 2) * _w));
+    auto right = (uint32_t) fmin(_w - 1, floor((b.x + b.w / 2) * _w));
 
     auto width = right - left;
     auto height = bottom - top;
