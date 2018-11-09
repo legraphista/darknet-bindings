@@ -30,12 +30,12 @@ Object DarknetDetections::Init(Napi::Env env, Object exports) {
 
 DarknetDetections::DarknetDetections(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DarknetDetections>(info) {
 
-  auto detection_external = info[0].As<External<detection>>();
+  auto detection_external = info[0].As<External<detection >>();
   _detections = detection_external.Data();
 
   _nb_detections = info[1].ToNumber();
 
-  auto names_external = info[2].As<External<std::vector<std::string>>>();
+  auto names_external = info[2].As<External<std::vector<std::string >>>();
   _names = names_external.Data();
 
   _nb_classes = info[3].ToNumber();
@@ -143,18 +143,14 @@ Napi::Value DarknetDetections::Interepret(const Napi::CallbackInfo &info) {
     auto bottom = (uint32_t) floor((b.y + b.h / 2) * _h);
 
     if (bottom > _h - 1) {
-      auto diff = (uint32_t) ceil((bottom - (_h - 1)) / 2.0);
-      top -= diff;
-      bottom -= diff;
+      bottom = _h - 1;
     }
 
     auto left = (uint32_t) floor((b.x - b.w / 2) * _w);
     auto right = (uint32_t) floor((b.x + b.w / 2) * _w);
 
     if (right > _w - 1) {
-      auto diff = (uint32_t) ceil((right - (_w - 1)) / 2.0);
-      left -= diff;
-      right -= diff;
+      right = _w - 1;
     }
 
     auto width = right - left;
