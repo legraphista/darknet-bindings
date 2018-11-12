@@ -47,6 +47,7 @@ private:
 
     Napi::Reference<Napi::Float32Array> _original_data;
     image _image;
+    bool _owns_data = false;
 
     uint32_t _original_w = 0;
     uint32_t _original_h = 0;
@@ -147,7 +148,7 @@ namespace DarknetImageWorkers {
 
           auto dnImage = DarknetImage::constructor.New(
               {
-                  float2js(env, output, w * h * c),
+                  float2external(env, output),
                   Napi::Number::New(env, w),
                   Napi::Number::New(env, h),
                   Napi::Number::New(env, c)
@@ -225,7 +226,7 @@ namespace DarknetImageWorkers {
 
           auto dnImage = DarknetImage::constructor.New(
               {
-                  float2js(env, output, w * h * c),
+                  float2external(env, output),
                   Napi::Number::New(env, w),
                   Napi::Number::New(env, h),
                   Napi::Number::New(env, c)

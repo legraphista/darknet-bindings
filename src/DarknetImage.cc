@@ -39,10 +39,22 @@ Object DarknetImage::Init(Napi::Env env, Object exports) {
 
 
 DarknetImage::DarknetImage(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DarknetImage>(info) {
+  auto env = info.Env();
+  if (info[0].IsExternal()) {
+    // if it's external, i own the data
+    _owns_data = true;
 
-  _original_data = Napi::Persistent<Float32Array>(info[0].As<Float32Array>());
+    _image.data = external2float(info[0]);
+  } else if (info[0].IsTypedArray()) {
+    // if it's a Float32Array, JS owns the data
+    _owns_data = false;
 
-  _image.data = _original_data.Value().Data();
+    _original_data = Napi::Persistent<Float32Array>(info[0].As<Float32Array>());
+
+    _image.data = _original_data.Value().Data();
+  } else {
+    js_fail("Data is not a typed array!");
+  }
 
   _image.w = info[1].ToNumber();
   _image.h = info[2].ToNumber();
@@ -85,6 +97,9 @@ void DarknetImage::release() {
   _released = true;
   // we would unref here, but at destructor time, Napi::Reference releases the data
   // _original_data.Unref();
+  if (_owns_data) {
+    free_image(_image);
+  }
 }
 
 image const &DarknetImage::get_image() const {
