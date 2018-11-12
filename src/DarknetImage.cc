@@ -112,7 +112,9 @@ Napi::Value DarknetImage::FromRGB(const Napi::CallbackInfo &info) {
   uint32_t w = info[1].ToNumber();
   uint32_t h = info[2].ToNumber();
   uint32_t c = info[3].ToNumber();
-  Function callback = info[4].As<Napi::Function>();
+
+  auto promise = Promise::Deferred::New(env);
+  Function callback = promise2callback(env, promise);
 
   auto *worker = new DarknetImageWorkers::RGB2DarknetImage(
       callback,
@@ -120,7 +122,7 @@ Napi::Value DarknetImage::FromRGB(const Napi::CallbackInfo &info) {
       w, h, c
   );
   worker->Queue();
-  return env.Undefined();
+  return promise.Promise();
 }
 
 Napi::Value DarknetImage::FromPlanarRGB(const Napi::CallbackInfo &info) {
@@ -132,7 +134,8 @@ Napi::Value DarknetImage::FromPlanarRGB(const Napi::CallbackInfo &info) {
   uint32_t w = info[3].ToNumber();
   uint32_t h = info[4].ToNumber();
 
-  Function callback = info[5].As<Napi::Function>();
+  auto promise = Promise::Deferred::New(env);
+  Function callback = promise2callback(env, promise);
 
   auto *worker = new DarknetImageWorkers::PlanarRGB2DarknetImage(
       callback,
@@ -142,7 +145,7 @@ Napi::Value DarknetImage::FromPlanarRGB(const Napi::CallbackInfo &info) {
       w, h
   );
   worker->Queue();
-  return env.Undefined();
+  return promise.Promise();
 }
 
 Napi::Value DarknetImage::LetterBox(const Napi::CallbackInfo &info) {
