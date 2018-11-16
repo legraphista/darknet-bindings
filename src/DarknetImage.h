@@ -267,15 +267,9 @@ namespace DarknetImageWorkers {
         void OnOK() {
           Napi::Env env = Env();
 
-          uint32_t len = (
-              (uint32_t) output.w *
-              (uint32_t) output.h *
-              (uint32_t) output.c
-          );
-
           auto dnImage = DarknetImage::constructor.New(
               {
-                  float2js(env, output.data, len),
+                  float2external(env, output.data),
                   Napi::Number::New(env, output.w),
                   Napi::Number::New(env, output.h),
                   Napi::Number::New(env, output.c),
