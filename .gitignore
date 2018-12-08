@@ -11,3 +11,7 @@ crash.log
 .DS_Store
 yolov3.weights
 *.mp4
+package-lock.json
+test-rgb-dn.js
+test-new.js
+yarn-error.log
