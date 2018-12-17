@@ -1,6 +1,6 @@
 {
   "name": "darknet-bindings",
-  "version": "2.0.0-pre7",
+  "version": "2.0.0-pre8",
   "description": "Darknet NAPI Bindings",
   "main": "lib/index.js",
   "scripts": {
